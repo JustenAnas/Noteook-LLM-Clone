@@ -5,7 +5,7 @@ import {
     getWorkspace,
     listWorkspaces,
     updateWorkspace,
-} from "../controllers/workspace.controller.js";
+} from "../controller/workspace.controller.js";
 import { requireAuth } from "../middleware/require-auth.middleware.js";
 import { asyncHandler } from "../utils/async-handler.js";
 

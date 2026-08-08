@@ -3,7 +3,8 @@ import "dotenv/config";
 import { auth } from "./lib/auth.js";
 import { toNodeHandler } from "better-auth/node";
 import cors from "cors";
- 
+import { registerRoutes } from "./routes/index.js";
+import { errorHandler } from "./middleware/error-handler.middleware.js";
  
 const app = express();
 const PORT = process.env.PORT || 8081;

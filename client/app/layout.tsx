@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono, Lora, Space_Grotesk } from "next/font/google";
 import "./globals.css";
 import { cn } from "@/lib/utils";
+import { ThemeProvider } from "@/components/providers/theme-provider";
+import QueryProvider from "@/components/providers/query-provider";
 
 const spaceGroteskHeading = Space_Grotesk({subsets:['latin'],variable:'--font-heading'});
 
@@ -27,8 +29,21 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
     <html
       lang="en"
       className={cn("h-full", "antialiased", geistSans.variable, geistMono.variable, "font-serif", lora.variable, spaceGroteskHeading.variable)}
+      suppressHydrationWarning
     >
-      <body className="min-h-full flex flex-col">{children}</body>
+       
+      <body className="min-h-full flex flex-col">
+        <ThemeProvider
+            attribute="class"
+            defaultTheme="system"
+            enableSystem
+            disableTransitionOnChange
+          >
+            <QueryProvider>
+        {children}
+        </QueryProvider>
+        </ThemeProvider>
+        </body>
     </html>
   );
 }

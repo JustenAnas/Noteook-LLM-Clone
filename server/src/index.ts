@@ -5,6 +5,9 @@ import { toNodeHandler } from "better-auth/node";
 import cors from "cors";
 import { registerRoutes } from "./routes/index.js";
 import { errorHandler } from "./middleware/error-handler.middleware.js";
+import { serve } from "inngest/express";
+import { inngest} from "./inngest/client.js"
+import {  functions } from "./inngest/index.js"
  
 const app = express();
 const PORT = process.env.PORT || 8081;
@@ -29,6 +32,9 @@ app.use(express.json());
 app.get("/", (req, res) => {
     res.send("Hello World");
 });
+
+// Set up the "/api/inngest" (recommended) routes with the serve handler
+app.use("/api/inngest", serve({ client: inngest, functions }));
 
 app.get("/health", (_req, res) => {
     res.json({ status: "ok" });

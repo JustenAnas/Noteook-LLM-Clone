@@ -17,7 +17,7 @@ import {
     CONVERSATION_SUMMARY_INTERVAL,
     RECENT_MESSAGE_WINDOW,
 } from "../lib/ai-config.js";
-import { enqueueConversationSummarize } from "../lib/conversation-events.js";
+import { enqueueConversationSummarize } from "../lib/conversation-event.js";
 import {
     buildChatSystemPrompt,
     retrieveWorkspaceContext,

@@ -1,5 +1,5 @@
 import { RAG_MIN_SCORE, RAG_TOP_K } from "../ai-config.js";
-import { embedTexts } from "../openai.js";
+import { embedTexts } from "../open-ai.js";
 import { queryWorkspaceVectors } from "../pinecone.js";
 
 export type RetrievedChunk = {

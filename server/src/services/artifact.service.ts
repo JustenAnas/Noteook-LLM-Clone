@@ -1,5 +1,5 @@
 import type { Prisma } from "../generated/prisma/client.js";
-import { enqueueArtifactGeneration } from "../lib/artifact-events.js";
+import { enqueueArtifactGeneration } from "../lib/artifact-event.js";
 import {
     createArtifactRecord,
     deleteArtifactRecord,
@@ -13,9 +13,9 @@ import { NotFoundError } from "../types/app-error.js";
 import {
     gatherSourceContext,
     generateArtifactContent,
-} from "./artifact-generation.services.js";
+} from "./artifact-genration.service.js";
 import { getWorkspaceByIdForUser } from "./workspace.services.js";
-import type { CreateArtifactInput } from "../validators/artifact.validator.js";
+import type { CreateArtifactInput } from "../validator/artifact.validator.js";
 
 /**
  * Lists all learning artifacts in a workspace.

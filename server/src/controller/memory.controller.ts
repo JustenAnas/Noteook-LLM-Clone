@@ -10,7 +10,7 @@ import {
     createMemorySchema,
     memoryIdParamSchema,
     updateMemorySchema,
-} from "../validators/memory.validator.js";
+} from "../validator/memory.validator.js";
 
 function parseMemoryId(params: Request["params"]) {
     const parsed = memoryIdParamSchema.safeParse(params);

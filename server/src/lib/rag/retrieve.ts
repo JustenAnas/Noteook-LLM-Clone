@@ -16,12 +16,14 @@ export type RetrievedChunk = {
 export async function retrieveWorkspaceContext(
     workspaceId: string,
     query: string,
+    sourceIds?: string[],
 ): Promise<RetrievedChunk[]> {
     const [embedding] = await embedTexts([query]);
     const matches = await queryWorkspaceVectors(
         workspaceId,
         embedding,
         RAG_TOP_K,
+        sourceIds,
     );
 
     const chunks: RetrievedChunk[] = [];

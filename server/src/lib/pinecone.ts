@@ -166,6 +166,7 @@ export async function deleteWorkspaceVectors(workspaceId: string) {
  * @param workspaceId - Pinecone namespace to search
  * @param vector - Query embedding (1536 dimensions)
  * @param topK - Maximum number of matches to return
+ * @param sourceIds - Optional array of source IDs to restrict the search to
  * @returns Pinecone match objects with scores and metadata
  *
  */
@@ -173,12 +174,20 @@ export async function queryWorkspaceVectors(
     workspaceId: string,
     vector: number[],
     topK: number,
+    sourceIds?: string[],
 ) {
     const index = await getPineconeIndex();
+    
+    // Build Pinecone filter if sourceIds are provided
+    const filter = sourceIds && sourceIds.length > 0 
+        ? { sourceId: { $in: sourceIds } } 
+        : undefined;
+
     const result = await index.namespace(workspaceId).query({
         vector,
         topK,
         includeMetadata: true,
+        filter,
     });
 
     return result.matches ?? [];

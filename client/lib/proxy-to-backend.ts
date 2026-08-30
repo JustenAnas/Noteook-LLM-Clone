@@ -39,7 +39,7 @@ export async function proxyToBackend(
     }
   });
 
-  const response = new NextResponse(await resp.arrayBuffer(), {
+  const response = new NextResponse(resp.body, {
     status: resp.status,
     headers: responseHeaders,
   });

@@ -16,11 +16,13 @@ export default function RegisterPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [step, setStep] = useState<"details" | "otp">("details");
+  const [otp, setOtp] = useState("");
   const [workspaceTitle, setWorkspaceTitle] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
 
-  async function onSubmit(e: React.FormEvent) {
+  async function handleSendOTP(e: React.FormEvent) {
     e.preventDefault();
     if (!name || !email || !password) {
       toast.error("Please fill in required fields");
@@ -33,6 +35,40 @@ export default function RegisterPage() {
 
     setIsSubmitting(true);
     try {
+      const res = await fetch("http://localhost:8081/api/otp/send", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Failed to send OTP");
+      
+      toast.success("OTP sent to your email!");
+      setStep("otp");
+    } catch (err: any) {
+      toast.error(err.message || "Failed to send OTP");
+    } finally {
+      setIsSubmitting(false);
+    }
+  }
+
+  async function handleVerifyAndRegister(e: React.FormEvent) {
+    e.preventDefault();
+    if (!otp) {
+      toast.error("Please enter the OTP");
+      return;
+    }
+
+    setIsSubmitting(true);
+    try {
+      const res = await fetch("http://localhost:8081/api/otp/verify", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, otp }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Invalid OTP");
+
       const result = await signUp.email({ name, email, password });
       if (result.error) {
         throw new Error(result.error.message || "Registration failed");
@@ -65,7 +101,8 @@ export default function RegisterPage() {
           </p>
         </div>
 
-        <form onSubmit={onSubmit} className="space-y-4">
+        {step === "details" ? (
+        <form onSubmit={handleSendOTP} className="space-y-4">
           <div>
             <label className="mb-2 block text-sm font-medium">Full name</label>
             <Input
@@ -121,9 +158,32 @@ export default function RegisterPage() {
           </div>
 
           <Button type="submit" className="w-full" disabled={isSubmitting}>
-            {isSubmitting ? "Creating account…" : "Create account"}
+            {isSubmitting ? "Sending OTP…" : "Continue with Email"}
           </Button>
         </form>
+        ) : (
+        <form onSubmit={handleVerifyAndRegister} className="space-y-4">
+          <div>
+            <label className="mb-2 block text-sm font-medium">Enter OTP</label>
+            <Input
+              value={otp}
+              onChange={(e) => setOtp(e.target.value)}
+              type="text"
+              placeholder="123456"
+              required
+            />
+            <p className="mt-2 text-xs text-muted-foreground">
+              We sent a code to {email}
+            </p>
+          </div>
+          <Button type="submit" className="w-full" disabled={isSubmitting}>
+            {isSubmitting ? "Verifying…" : "Verify and Create Account"}
+          </Button>
+          <Button type="button" variant="ghost" className="w-full" onClick={() => setStep("details")} disabled={isSubmitting}>
+            Back
+          </Button>
+        </form>
+        )}
 
         <div className="relative my-6">
           <div className="absolute inset-0 flex items-center" aria-hidden>

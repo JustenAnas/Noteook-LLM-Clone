@@ -14,18 +14,39 @@ export async function chat(req: Request, res: Response) {
     const lastMessage = messages[messages.length - 1];
     const query = lastMessage?.content || "";
     
-    // Retrieve relevant context, optionally filtered by selected sourceIds
-    const chunks = await retrieveWorkspaceContext(workspaceId, query, sourceIds);
-    const systemPrompt = buildChatSystemPrompt({ chunks });
+    try {
+        console.log("Received messages:", JSON.stringify(messages, null, 2));
+        
+        // Retrieve relevant context, optionally filtered by selected sourceIds
+        const chunks = await retrieveWorkspaceContext(workspaceId, query, sourceIds);
+        const systemPrompt = buildChatSystemPrompt({ chunks });
 
-    // Stream the LLM response back to the client using Vercel AI SDK
-    const result = await streamText({
-        model: openai(CHAT_MODEL),
-        system: systemPrompt,
-        messages,
-    });
+        const coreMessages = messages.map((m: any) => {
+            let content = m.content;
+            if (content === undefined && m.parts && Array.isArray(m.parts)) {
+                content = m.parts
+                    .filter((p: any) => p.type === 'text')
+                    .map((p: any) => p.text)
+                    .join('\n');
+            }
+            return {
+                role: m.role,
+                content: content || "",
+            };
+        });
 
-    result.pipeDataStreamToResponse(res);
+        // Stream the LLM response back to the client using Vercel AI SDK
+        const result = await streamText({
+            model: openai(CHAT_MODEL),
+            system: systemPrompt,
+            messages: coreMessages,
+        });
+
+        result.pipeUIMessageStreamToResponse(res);
+    } catch (error) {
+        console.error("Error in chat controller:", error);
+        res.status(500).json({ error: "Internal server error" });
+    }
 }
 
 // POST /api/workspaces/:workspaceId/chat/guide

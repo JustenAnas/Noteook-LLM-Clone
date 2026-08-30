@@ -62,7 +62,12 @@ export default function AuthPage() {
           </div>
 
           <div>
-            <label className="mb-2 block text-sm font-medium">Password</label>
+            <div className="flex items-center justify-between mb-2">
+              <label className="block text-sm font-medium">Password</label>
+              <Link href="/auth/forgot-password" className="text-xs text-primary underline">
+                Forgot password?
+              </Link>
+            </div>
             <Input name="password" type="password" placeholder="••••••••" required />
           </div>
 

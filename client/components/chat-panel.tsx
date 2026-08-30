@@ -1,10 +1,11 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useRef, useState, useEffect } from "react";
 import { ArrowUp, Paperclip, Bot, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { useChat } from "@ai-sdk/react";
+import { DefaultChatTransport } from "ai";
 import {
   MessageScrollerProvider,
   MessageScroller,
@@ -19,10 +20,12 @@ import { Bubble, BubbleContent } from "@/components/ui/bubble";
 export function ChatPanel({ workspaceId, selected }: { workspaceId: string; selected: Set<string> }) {
   const [input, setInput] = useState("");
   const { messages, sendMessage, status } = useChat({
-    api: `/api/workspaces/${workspaceId}/chat`,
-    body: {
-      sourceIds: Array.from(selected),
-    },
+    transport: new DefaultChatTransport({
+      api: `/api/workspaces/${workspaceId}/chat`,
+      body: {
+        sourceIds: Array.from(selected),
+      },
+    }),
     onError: (err) => {
         console.error("Chat error:", err);
     }
@@ -48,21 +51,39 @@ export function ChatPanel({ workspaceId, selected }: { workspaceId: string; sele
     }
   };
 
+  const viewportRef = useRef<HTMLDivElement>(null);
+  
+  // Auto-scroll to bottom when streaming new content
+  useEffect(() => {
+    if (status === "streaming" && viewportRef.current) {
+        const viewport = viewportRef.current;
+        // Check if we are near the bottom (within 150px)
+        const isNearBottom = viewport.scrollHeight - viewport.scrollTop - viewport.clientHeight < 150;
+        
+        if (isNearBottom) {
+            viewport.scrollTo({ top: viewport.scrollHeight, behavior: "smooth" });
+        }
+    }
+  }, [messages, status]);
+
   return (
     <div className="flex h-full w-full flex-col min-w-0 relative">
       {/* Messages Area */}
       <div className="flex-1 overflow-hidden">
         <MessageScrollerProvider>
           <MessageScroller className="px-4 py-6 md:px-8">
-            <MessageScrollerViewport>
+            <MessageScrollerViewport ref={viewportRef}>
               <MessageScrollerContent>
                 {messages.length === 0 && (
                     <div className="flex items-center justify-center h-full text-muted-foreground mt-20">
                         Chat with your selected sources!
                     </div>
                 )}
-                {messages.map((msg) => (
-                  <MessageScrollerItem key={msg.id} className="w-full">
+                {messages.map((msg, index) => {
+                  const content = msg.content || (msg.parts ? msg.parts.filter((p: any) => p.type === 'text').map((p: any) => p.text).join('') : "");
+                  const isLast = index === messages.length - 1;
+                  return (
+                  <MessageScrollerItem key={msg.id} className="w-full" scrollAnchor={isLast && status !== "submitted"}>
                     <MessageGroup>
                       <Message align={msg.role === "user" ? "end" : "start"}>
                         <MessageAvatar className="size-8 mt-auto shrink-0 shadow-sm border border-border/50">
@@ -70,13 +91,33 @@ export function ChatPanel({ workspaceId, selected }: { workspaceId: string; sele
                         </MessageAvatar>
                         <Bubble variant={msg.role === "user" ? "default" : "secondary"}>
                           <BubbleContent className="text-[15px] leading-relaxed shadow-sm">
-                            {msg.content}
+                            {content}
                           </BubbleContent>
                         </Bubble>
                       </Message>
                     </MessageGroup>
                   </MessageScrollerItem>
-                ))}
+                )})}
+                {status === "submitted" && (
+                  <MessageScrollerItem className="w-full" scrollAnchor>
+                    <MessageGroup>
+                      <Message align="start">
+                        <MessageAvatar className="size-8 mt-auto shrink-0 shadow-sm border border-border/50">
+                          <Bot className="size-5 text-primary" />
+                        </MessageAvatar>
+                        <Bubble variant="secondary">
+                          <BubbleContent className="text-[15px] leading-relaxed shadow-sm flex items-center h-[44px]">
+                            <span className="flex gap-1.5 items-center justify-center">
+                              <span className="size-1.5 bg-foreground/40 rounded-full animate-bounce [animation-delay:-0.3s]"></span>
+                              <span className="size-1.5 bg-foreground/40 rounded-full animate-bounce [animation-delay:-0.15s]"></span>
+                              <span className="size-1.5 bg-foreground/40 rounded-full animate-bounce"></span>
+                            </span>
+                          </BubbleContent>
+                        </Bubble>
+                      </Message>
+                    </MessageGroup>
+                  </MessageScrollerItem>
+                )}
               </MessageScrollerContent>
             </MessageScrollerViewport>
             <MessageScrollerButton />

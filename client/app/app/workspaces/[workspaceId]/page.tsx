@@ -3,7 +3,15 @@
 import { useEffect, useMemo, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
-import { ChevronLeft, MessageSquare, BookOpen, Settings } from "lucide-react";
+import { ChevronLeft, MessageSquare, BookOpen, Settings, LogOut, Edit } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+  DropdownMenuSeparator,
+} from "@/components/ui/dropdown-menu";
+import { signOut } from "@/lib/auth-client";
 import EditWorkspaceModal from "@/components/edit-workspace-modal";
 import ImportSourceModal from "@/components/import-source-modal";
 import { ChatPanel } from "@/components/chat-panel";
@@ -145,9 +153,27 @@ export default function WorkspaceDetailPage() {
           </div>
         </div>
         <div className="flex items-center gap-2">
-          <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full" onClick={() => setEditOpen(true)}>
-            <Settings className="size-4 text-muted-foreground" />
-          </Button>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full">
+                <Settings className="size-4 text-muted-foreground" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem onClick={() => setEditOpen(true)}>
+                <Edit className="size-4 mr-2" />
+                Edit Workspace
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={async () => {
+                await signOut();
+                router.replace("/auth");
+              }} className="text-red-500 focus:text-red-500">
+                <LogOut className="size-4 mr-2" />
+                Log out
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </header>
 

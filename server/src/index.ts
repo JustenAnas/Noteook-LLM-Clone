@@ -4,6 +4,7 @@ import { auth } from "./lib/auth.js";
 import { toNodeHandler } from "better-auth/node";
 import cors from "cors";
 import { registerRoutes } from "./routes/index.js";
+import otpRoutes from "./controller/otp.controller.js";
 import { errorHandler } from "./middleware/error-handler.middleware.js";
 import { serve } from "inngest/express";
 import { inngest} from "./inngest/client.js"
@@ -42,6 +43,7 @@ app.get("/health", (_req, res) => {
 
 
 registerRoutes(app);
+app.use("/api/otp", otpRoutes);
 
 app.use(errorHandler)
 

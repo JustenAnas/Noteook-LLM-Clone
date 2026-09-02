@@ -283,7 +283,9 @@ export default function Home() {
 
         {/* Section 3: Social Proof */}
         <section className="py-16 md:py-24">
+          <h1 className="text-center text-[32px] font-bold mb-8 mx-auto">What people are saying</h1>
           <div className="grid md:grid-cols-3 gap-6">
+            
             {[
               {
                 text: '"A completely new way to interact with the information you care about."',
@@ -327,29 +329,133 @@ export default function Home() {
 
         {/* Section 4: Privacy */}
         <section className="py-16 md:py-24 flex justify-center">
-          <div className="max-w-[700px] text-center">
-            <p className="text-[#5f6368] text-[16px] leading-relaxed">
-              As an organization or school, your data will stay private. Your
-              uploaded documents and interactions are not used to train our
-              public models without your explicit permission. We value your
-              privacy and trust above all.
+          <div className="max-w-[900px] w-full flex flex-col items-center text-center">
+            <div className="max-w-[700px] text-center">
+            <h1
+              className="font-normal text-[40px] leading-[48px] mb-4 text-black"
+              style={{
+                fontFamily: '"Google Sans", Helvetica, Arial, sans-serif',
+                fontWeight: 400,
+                color: "rgb(0, 0, 0)",
+              }}
+            >
+              We value your privacy and never use your organization's data to train Gemini Notebook
+            </h1>
+            <p
+              className="font-normal text-[24px] leading-[36px]"
+              style={{
+                fontFamily: '"Google Sans", Helvetica, Arial, sans-serif',
+                fontWeight: 400,
+                color: "rgb(114, 111, 111)",
+              }}
+            >
+              As an organization or school, your data will stay private to you. When you use Gemini Notebook as an individual, your data is not used for training unless you share feedback, see more details here.
             </p>
+            </div>
+            <img
+              src="https://notebook.google/_/static/v4/privacy.png"
+              alt="Privacy information"
+              className="mt-12 w-full h-auto"
+            />
           </div>
         </section>
 
         {/* Section 5: FAQ */}
-        <section className="pt-16 pb-32 flex flex-col items-center">
-          <div className="w-full max-w-[900px]">
-            <FAQItem
-              question="How do I report a result in Gemini Notebook that I believe creates a safety concern or is inappropriate?"
-              answer="You can report safety concerns directly through the app by clicking the flag icon on any generated response."
-            />
-            <FAQItem
-              question="If I find a bug or have a feature idea, how can I submit my feedback?"
-              answer="We welcome feedback! Please use the 'Send Feedback' option in the settings menu or join our Discord community to share your ideas."
-            />
-          </div>
-        </section>
+        <section className="pt-16 pb-2 flex flex-col items-center">
+  <div className="header w-full flex flex-col items-center text-center mb-12">
+    <h1
+      className="font-normal text-[40px] leading-[48px]"
+      style={{
+        fontFamily: '"Google Sans", Helvetica, Arial, sans-serif',
+        fontWeight: 400,
+        color: "rgb(0, 0, 0)",
+      }}
+    >
+      Want to learn more?
+    </h1>
+
+    <p
+      className="mt-3 font-normal text-[18px] leading-[28px]"
+      style={{
+        fontFamily: '"Google Sans Text", Helvetica, Arial, sans-serif',
+        fontWeight: 400,
+        color: "rgb(114, 111, 111)",
+      }}
+    >
+      Here are some answers to common questions.
+    </p>
+  </div>
+
+  <div className="w-full max-w-[900px]">
+    <FAQItem
+      question="Is Gemini Notebook the same product as NotebookLM?"
+      answer={`Yes. NotebookLM is now Gemini Notebook as of July 2026. It is the same product you know and love, and all of your existing notebooks remain fully accessible.
+
+This reflects a natural evolution of the product. We're continuing to expand notebooks beyond a standalone app into an integrated workspace that brings your context across our AI products.
+
+You can continue to use Gemini Notebook across web and mobile as a standalone tool.`}
+    />
+
+    <FAQItem
+      question="What makes Gemini Notebook different from other AI-powered note-taking apps?"
+      answer={`As a research assistant, Gemini Notebook's advantage is being source-grounded. This helps deliver more accurate answers and insights based on your actual material — reducing the likelihood of AI errors and hallucinations.`}
+    />
+
+    <FAQItem
+      question="How will the integration with Gemini AI improve Gemini Notebook?"
+      answer={`Built with the latest Gemini model, Gemini Notebook gains a more nuanced understanding of your sources. This delivers more insightful summaries, helps identify deeper connections across documents, and provides more accurate answers to your questions.`}
+    />
+
+    <FAQItem
+      question="What are the main advantages of Gemini Notebook compared to other AI learning apps?"
+      answer={`Gemini Notebook offers several key advantages:
+
+Direct control over sources: You provide the documents and information Gemini Notebook uses, ensuring the responses are grounded in your specific knowledge base.
+
+Reduced hallucinations: By strictly referencing your uploaded sources, Notebook reduces the risk of the AI generating inaccurate information.
+
+Personalized learning: It creates a highly personalized learning and research environment tailored to your specific needs and content.
+
+Efficiency in information synthesis: It dramatically speeds up the process of understanding, synthesizing, and extracting insights from large volumes of text.
+
+Trust and reliability: The transparency of knowing exactly where the AI's information comes from builds greater trust in its output.`}
+    />
+
+    <FAQItem
+      question="Is Gemini Notebook the same product as NotebookLM?"
+      answer={`Yes. NotebookLM is now Gemini Notebook as of July 2026. It is the same product you know and love, and all of your existing notebooks remain fully accessible.
+
+This reflects a natural evolution of the product. We're continuing to expand notebooks beyond a standalone app into an integrated workspace that brings your context across our AI products.
+
+You can continue to use Gemini Notebook across web and mobile as a standalone tool.`}
+    />
+
+    <FAQItem
+      question="What makes Gemini Notebook different from other AI-powered note-taking apps?"
+      answer={`As a research assistant, Gemini Notebook's advantage is being source-grounded. This helps deliver more accurate answers and insights based on your actual material — reducing the likelihood of AI errors and hallucinations.`}
+    />
+
+    <FAQItem
+      question="How will the integration with Gemini AI improve Gemini Notebook?"
+      answer={`Built with the latest Gemini model, Gemini Notebook gains a more nuanced understanding of your sources. This delivers more insightful summaries, helps identify deeper connections across documents, and provides more accurate answers to your questions.`}
+    />
+
+    <FAQItem
+      question="What are the main advantages of Gemini Notebook compared to other AI learning apps?"
+      answer={`Gemini Notebook offers several key advantages:
+
+Direct control over sources: You provide the documents and information Gemini Notebook uses, ensuring the responses are grounded in your specific knowledge base.
+
+Reduced hallucinations: By strictly referencing your uploaded sources, Notebook reduces the risk of the AI generating inaccurate information.
+
+Personalized learning: It creates a highly personalized learning and research environment tailored to your specific needs and content.
+
+Efficiency in information synthesis: It dramatically speeds up the process of understanding, synthesizing, and extracting insights from large volumes of text.
+
+Trust and reliability: The transparency of knowing exactly where the AI's information comes from builds greater trust in its output.`}
+    />
+  </div>
+</section>
       </main>
 
       {/* Atmospheric Gradient Blur above footer */}
@@ -358,7 +464,7 @@ export default function Home() {
           className="absolute bottom-0 w-full h-[120px]"
           style={{
             background:
-              "linear-gradient(to right, rgba(230, 230, 255, 0.8) 0%, rgba(138, 180, 248, 0.6) 25%, rgba(140, 235, 175, 0.5) 70%, rgba(255, 255, 255, 0) 100%)",
+              "linear-gradient(to right, rgba(230, 230, 255, 0.8) 0%, rgba(138, 180, 248, 0.6) 25%, rgba(206, 254, 211, 1) 70%, rgba(255, 255, 255, 0) 100%)",
             filter: "blur(45px)",
             transform: "scale(1.1)",
           }}

@@ -7,7 +7,7 @@ import prisma from "../lib/db.js";
 
 // POST /api/workspaces/:workspaceId/chat
 export async function chat(req: Request, res: Response) {
-    const { workspaceId } = req.params;
+    const workspaceId = req.params.workspaceId as string;
     const { messages, sourceIds } = req.body;
     
     // Get the last user message to query the vector DB
@@ -51,7 +51,7 @@ export async function chat(req: Request, res: Response) {
 
 // POST /api/workspaces/:workspaceId/chat/guide
 export async function generateGuide(req: Request, res: Response) {
-    const { workspaceId } = req.params;
+    const workspaceId = req.params.workspaceId as string;
     const { tool, sourceIds } = req.body;
 
     if (!sourceIds || sourceIds.length === 0) {

@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { signIn, signUp } from "@/lib/auth-client";
 import { api } from "@/lib/api";
+import { SERVER_URL } from "@/lib/config";
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -35,7 +36,7 @@ export default function RegisterPage() {
 
     setIsSubmitting(true);
     try {
-      const res = await fetch("http://localhost:8081/api/otp/send", {
+      const res = await fetch(`${SERVER_URL}/api/otp/send`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email }),
@@ -61,7 +62,7 @@ export default function RegisterPage() {
 
     setIsSubmitting(true);
     try {
-      const res = await fetch("http://localhost:8081/api/otp/verify", {
+      const res = await fetch(`${SERVER_URL}/api/otp/verify`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, otp }),

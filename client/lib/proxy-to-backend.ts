@@ -11,7 +11,14 @@ export async function proxyToBackend(
   const headers = new Headers();
   
   // Forward essential headers for better-auth CSRF and session validation
-  const headersToForward = ["cookie", "content-type", "accept", "origin", "host", "user-agent", "referer"];
+  const headersToForward = [
+    "cookie",
+    "content-type",
+    "accept", 
+    "origin", 
+    // "host", 
+    "user-agent", 
+    "referer"];
   headersToForward.forEach((h) => {
     const val = request.headers.get(h);
     if (val) headers.set(h, val);

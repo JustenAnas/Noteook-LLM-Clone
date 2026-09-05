@@ -10,7 +10,9 @@ function createPrismaClient(): PrismaClient {
     const pool = new pg.Pool({
         connectionString: process.env.DATABASE_URL,
     });
-
+    pool.query("SELECT 1")
+  .then(() => console.log("🔥 DATABASE RUNTIME CONNECTED"))
+  .catch((err) => console.error("🔥 DATABASE RUNTIME ERROR:", err));
     const adapter = new PrismaPg(pool as any);
 
     return new PrismaClient({ adapter });

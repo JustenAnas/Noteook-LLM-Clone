@@ -19,6 +19,9 @@ function createPrismaClient(): PrismaClient {
 }
 
 const prisma = globalForPrisma.prisma ?? createPrismaClient();
+prisma.user.findFirst()
+  .then((user) => console.log("🔥 PRISMA USER QUERY:", user))
+  .catch((err) => console.error("🔥 PRISMA USER QUERY ERROR:", err));
 
 if (process.env.NODE_ENV !== "production") {
     globalForPrisma.prisma = prisma;

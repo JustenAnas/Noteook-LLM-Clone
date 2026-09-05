@@ -1,7 +1,18 @@
-import { NextResponse } from "next/server";
+import { NextRequest } from "next/server";
+import { proxyToBackend } from "@/lib/proxy-to-backend";
 
-export async function GET() {
-  return NextResponse.json({
-    route: "working",
-  });
+type RouteContext = {
+  params: Promise<{ all: string[] }>;
+};
+
+async function handle(request: NextRequest, context: RouteContext) {
+  const { all } = await context.params;
+  const path = all.join("/");
+  return proxyToBackend(request, `/api/auth/${path}`);
 }
+
+export const GET = handle;
+export const POST = handle;
+export const PUT = handle;
+export const PATCH = handle;
+export const DELETE = handle;

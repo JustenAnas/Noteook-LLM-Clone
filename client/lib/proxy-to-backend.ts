@@ -35,6 +35,12 @@ export async function proxyToBackend(
     init.body = await request.arrayBuffer();
   }
 
+  console.log("AUTH PROXY:", {
+  targetUrl,
+  method: request.method,
+  origin: request.headers.get("origin"),
+});
+
   const resp = await fetch(targetUrl, init);
 
   const responseHeaders = new Headers();

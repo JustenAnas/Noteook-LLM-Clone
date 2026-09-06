@@ -33,7 +33,10 @@ export default function AppPage() {
       toast.error(err instanceof Error ? err.message : "Delete failed");
     }
   }
-
+  console.log("SESSION:", session);
+console.log("SESSION LOADING:", sessionLoading);
+console.log("WORKSPACES:", workspaces);
+console.log("WORKSPACES LOADING:", workspacesLoading);
   if (sessionLoading || workspacesLoading) {
     return (
       <div className="flex min-h-screen items-center justify-center">

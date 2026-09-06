@@ -6,7 +6,7 @@ export async function proxyToBackend(
   backendPath: string,
 ): Promise<NextResponse> {
   const url = new URL(request.url);
-  const targetUrl = `${SERVER_URL}${backendPath.replace(/^\/+/, "")}${url.search}`;
+  const targetUrl = `${SERVER_URL}/${backendPath.replace(/^\/+/, "")}${url.search}`;
 
   const headers = new Headers();
   

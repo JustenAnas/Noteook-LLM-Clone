@@ -72,7 +72,25 @@ function buildQuery(params?: ListSourcesQuery): string {
 
 export const api = {
   workspaces: {
-    list: () => request<Workspace[]>("/api/workspaces"),
+   list: async () => {
+  console.log("🔥 WORKSPACE FETCH START");
+
+  const res = await fetch("/api/workspaces", {
+    credentials: "include",
+  });
+
+  console.log("🔥 WORKSPACE FETCH RESPONSE", res.status);
+
+  const text = await res.text();
+
+  console.log("🔥 WORKSPACE RESPONSE BODY", text);
+
+  if (!res.ok) {
+    throw new Error(`Workspace request failed: ${res.status}`);
+  }
+
+  return JSON.parse(text) as Workspace[];
+},
 
     get: (workspaceId: string) =>
       request<Workspace>(`/api/workspaces/${workspaceId}`),

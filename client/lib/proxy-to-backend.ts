@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+
 import { SERVER_URL } from "./config";
 
 export async function proxyToBackend(
@@ -6,19 +7,21 @@ export async function proxyToBackend(
   backendPath: string,
 ): Promise<NextResponse> {
   const url = new URL(request.url);
- const targetUrl = `${SERVER_URL}${backendPath.replace(/^\/+/, "")}${url.search}`;
+
+  const targetUrl =
+    `${SERVER_URL}${backendPath.replace(/^\/+/, "")}${url.search}`;
 
   const headers = new Headers();
-  
-  // Forward essential headers for better-auth CSRF and session validation
+
   const headersToForward = [
     "cookie",
     "content-type",
-    "accept", 
-    "origin", 
-    // "host", 
-    "user-agent", 
-    "referer"];
+    "accept",
+    "origin",
+    "user-agent",
+    "referer",
+  ];
+
   headersToForward.forEach((h) => {
     const val = request.headers.get(h);
     if (val) headers.set(h, val);
@@ -28,7 +31,7 @@ export async function proxyToBackend(
     method: request.method,
     headers,
     credentials: "include",
-    redirect: "manual", // IMPORTANT: Don't follow redirects, pass them to the client
+    redirect: "manual",
   };
 
   if (request.method !== "GET" && request.method !== "HEAD") {
@@ -36,45 +39,44 @@ export async function proxyToBackend(
   }
 
   console.log("AUTH PROXY:", {
-  targetUrl,
-  method: request.method,
-  origin: request.headers.get("origin"),
-});
+    targetUrl,
+    method: request.method,
+    origin: request.headers.get("origin"),
+  });
 
   const resp = await fetch(targetUrl, init);
 
-console.log("🔥 PROXY RESPONSE", {
-  status: resp.status,
-  contentType: resp.headers.get("content-type"),
-  contentLength: resp.headers.get("content-length"),
-  transferEncoding: resp.headers.get("transfer-encoding"),
-});
-
-const responseBody = await resp.text();
-
-console.log("🔥 PROXY BODY", responseBody);
-
   const responseHeaders = new Headers();
-  
-  // Forward all response headers except set-cookie (which needs special handling)
+
   resp.headers.forEach((value, key) => {
-    if (key.toLowerCase() !== "set-cookie" && key.toLowerCase() !== "content-encoding") {
+    const lowerKey = key.toLowerCase();
+
+    if (
+      lowerKey !== "set-cookie" &&
+      lowerKey !== "content-encoding" &&
+      lowerKey !== "content-length" &&
+      lowerKey !== "transfer-encoding" &&
+      lowerKey !== "connection"
+    ) {
       responseHeaders.set(key, value);
     }
   });
 
-  const response = new NextResponse(responseBody, {
+  const response = new NextResponse(resp.body, {
     status: resp.status,
     headers: responseHeaders,
   });
 
   if (typeof resp.headers.getSetCookie === "function") {
-    for (const c of resp.headers.getSetCookie()) {
-      response.headers.append("Set-Cookie", c);
+    for (const cookie of resp.headers.getSetCookie()) {
+      response.headers.append("Set-Cookie", cookie);
     }
   } else {
     const setCookie = resp.headers.get("set-cookie");
-    if (setCookie) response.headers.set("Set-Cookie", setCookie);
+
+    if (setCookie) {
+      response.headers.set("Set-Cookie", setCookie);
+    }
   }
 
   return response;

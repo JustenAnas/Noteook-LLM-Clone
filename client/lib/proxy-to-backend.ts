@@ -43,6 +43,17 @@ export async function proxyToBackend(
 
   const resp = await fetch(targetUrl, init);
 
+console.log("🔥 PROXY RESPONSE", {
+  status: resp.status,
+  contentType: resp.headers.get("content-type"),
+  contentLength: resp.headers.get("content-length"),
+  transferEncoding: resp.headers.get("transfer-encoding"),
+});
+
+const responseBody = await resp.text();
+
+console.log("🔥 PROXY BODY", responseBody);
+
   const responseHeaders = new Headers();
   
   // Forward all response headers except set-cookie (which needs special handling)
@@ -52,7 +63,7 @@ export async function proxyToBackend(
     }
   });
 
-  const response = new NextResponse(resp.body, {
+  const response = new NextResponse(responseBody, {
     status: resp.status,
     headers: responseHeaders,
   });

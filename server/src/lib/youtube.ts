@@ -22,9 +22,11 @@ export async function fetchYoutubeTranscript(url: string) {
         }
 
         return { videoId, content };
-    } catch {
-        throw new ValidationError(
-            "Could not fetch transcript. The video may not have captions.",
-        );
-    }
+    } catch (error) {
+    console.error("YouTube transcript error:", error);
+
+    throw new ValidationError(
+        "Could not fetch transcript. The video may not have captions.",
+    );
+}
 }

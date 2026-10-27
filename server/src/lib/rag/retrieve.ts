@@ -13,11 +13,16 @@ export type RetrievedChunk = {
     score: number;
 };
 
+
+
 export async function retrieveWorkspaceContext(
     workspaceId: string,
     query: string,
     sourceIds?: string[],
 ): Promise<RetrievedChunk[]> {
+    if (!query.trim()) {
+    return [];
+}
     const [embedding] = await embedTexts([query]);
     const matches = await queryWorkspaceVectors(
         workspaceId,

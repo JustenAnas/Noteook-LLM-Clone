@@ -11,12 +11,26 @@ export async function chat(req: Request, res: Response) {
     const { messages, sourceIds } = req.body;
     
     // Get the last user message to query the vector DB
-    const lastMessage = messages[messages.length - 1];
-    const query = lastMessage?.content || "";
+    const lastMessage = [...messages]
+    .reverse()
+    .find((m) => m.role === "user");
+
+const query =
+    typeof lastMessage?.content === "string"
+        ? lastMessage.content.trim()
+        : (lastMessage?.parts ?? [])
+              .filter((p: any) => p.type === "text")
+              .map((p: any) => p.text)
+              .filter((text: unknown): text is string => typeof text === "string")
+              .join("\n")
+              .trim();
     
     try {
         console.log("Received messages:", JSON.stringify(messages, null, 2));
-        
+        if (!query) {
+    res.status(400).json({ error: "Message cannot be empty" });
+    return;
+}
         // Retrieve relevant context, optionally filtered by selected sourceIds
         const chunks = await retrieveWorkspaceContext(workspaceId, query, sourceIds);
         const systemPrompt = buildChatSystemPrompt({ chunks });

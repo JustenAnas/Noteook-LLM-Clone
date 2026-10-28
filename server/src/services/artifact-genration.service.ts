@@ -1,3 +1,4 @@
+
 import { generateText, Output } from "ai";
 import { openai } from "@ai-sdk/openai";
 import { z } from "zod";
@@ -9,41 +10,32 @@ import { ValidationError } from "../types/app-error.js";
 const MAX_CONTEXT_CHARS = 120_000;
 
 const flashcardsSchema = z.object({
-    cards: z
-        .array(
-            z.object({
-                front: z.string(),
-                back: z.string(),
-            }),
-        )
-        .min(3)
-        .max(30),
+    cards: z.array(
+        z.object({
+            front: z.string(),
+            back: z.string(),
+        }),
+    ).min(3).max(30),
 });
 
 const quizSchema = z.object({
-    questions: z
-        .array(
-            z.object({
-                question: z.string(),
-                options: z.array(z.string()).min(2).max(5),
-                correctIndex: z.number().int().min(0),
-                explanation: z.string(),
-            }),
-        )
-        .min(3)
-        .max(15),
+    questions: z.array(
+        z.object({
+            question: z.string(),
+            options: z.array(z.string()).min(2).max(5),
+            correctIndex: z.number().int().min(0),
+            explanation: z.string(),
+        }),
+    ).min(3).max(15),
 });
 
 const mindmapSchema = z.object({
-    nodes: z
-        .array(
-            z.object({
-                id: z.string(),
-                label: z.string(),
-            }),
-        )
-        .min(2)
-        .max(40),
+    nodes: z.array(
+        z.object({
+            id: z.string(),
+            label: z.string(),
+        }),
+    ).min(2).max(40),
     edges: z.array(
         z.object({
             id: z.string(),
@@ -67,17 +59,69 @@ const reportSchema = z.object({
     ),
 });
 
-/**
- * Collects and concatenates text from READY workspace sources for artifact generation.
- *
- * @param workspaceId - Workspace whose sources to read
- * @param sourceIds - Optional subset of source ids; defaults to all READY sources
- * @returns Combined source text (max 120k chars) and the ids actually used
- * @throws {ValidationError} When no ready sources exist or none have extracted content
- *
- *
- *
- */
+function cleanWebsiteContent(content: string): string {
+    const lines = content.split(/\r?\n/);
+    const cleaned: string[] = [];
+
+    const unwantedHeadings = [
+        "suggested searches",
+        "popular searches",
+        "related articles",
+        "related stories",
+        "latest news",
+        "recent highlights",
+        "explore more",
+        "you may also like",
+        "recommended articles",
+        "follow us",
+        "footer",
+    ];
+
+    let skipSection = false;
+    let skipLevel = 0;
+
+    for (const line of lines) {
+        const heading = line.match(/^(#{1,6})\s+(.+)$/);
+
+        if (heading) {
+            const level = heading[1]!.length;
+            const title = heading[2]!
+                .replace(/\[([^\]]+)\]\([^)]+\)/g, "$1")
+                .trim()
+                .toLowerCase();
+
+            if (skipSection && level <= skipLevel) {
+                skipSection = false;
+            }
+
+            if (
+                unwantedHeadings.some(
+                    (unwanted) =>
+                        title === unwanted ||
+                        title.startsWith(`${unwanted}:`),
+                )
+            ) {
+                skipSection = true;
+                skipLevel = level;
+                continue;
+            }
+        }
+
+        if (skipSection) continue;
+
+        if (/^\s*(skip to content|back to top)\s*$/i.test(line)) {
+            continue;
+        }
+
+        cleaned.push(line);
+    }
+
+    return cleaned
+        .join("\n")
+        .replace(/\n{3,}/g, "\n\n")
+        .trim();
+}
+
 export async function gatherSourceContext(
     workspaceId: string,
     sourceIds?: string[],
@@ -97,8 +141,18 @@ export async function gatherSourceContext(
     }
 
     const withContent = selected.flatMap((source) => {
-        const content = source.content?.trim();
-        return content ? [{ title: source.title, content }] : [];
+        const rawContent = source.content?.trim();
+
+        if (!rawContent) return [];
+
+        const content =
+            source.type === "WEBSITE"
+                ? cleanWebsiteContent(rawContent)
+                : rawContent;
+
+        return content
+            ? [{ title: source.title, content }]
+            : [];
     });
 
     if (withContent.length === 0) {
@@ -118,25 +172,23 @@ export async function gatherSourceContext(
     };
 }
 
-/**
- * Generates structured or markdown content for a learning artifact using the AI SDK.
- *
- * @param type - Artifact type (`SUMMARY`, `QUIZ`, `FLASHCARDS`, etc.)
- * @param sourceText - Combined source material from {@link gatherSourceContext}
- * @returns Type-specific JSON content stored on the artifact row
- * @throws {ValidationError} When the artifact type is unsupported
- *
- *
- *
- */
 export async function generateArtifactContent(
     type: ArtifactRecord["type"],
     sourceText: string,
 ) {
     const system = [
-        `You are Chaibook, an expert learning assistant generating a ${type.toLowerCase()} from workspace source materials.`,
-        "Use ONLY the provided source content. Do not invent facts not supported by the sources.",
-        "Be clear, educational, and well-structured.",
+        "You are Chaibook, an expert source-grounded learning assistant.",
+        "Use ONLY the provided source content.",
+        "Never invent facts, numbers, dates, events, or citations.",
+        "Focus on the primary subject of each source.",
+        "Ignore website navigation, menus, search suggestions, promotional links, footers, and unrelated recommended articles.",
+        "Do not summarize unrelated news merely because it appears in a scraped webpage.",
+        "Prefer meaningful explanations over lists of URLs.",
+        "If information is missing, explicitly acknowledge the limitation.",
+        "For markdown output, use valid Markdown syntax.",
+        "Do not escape Markdown headings, bullet markers, or link syntax.",
+        "Do not wrap the entire response in a code fence.",
+        "Be accurate, concise, educational, and well-structured.",
     ].join("\n");
 
     switch (type) {
@@ -144,56 +196,122 @@ export async function generateArtifactContent(
             const result = await generateText({
                 model: openai(CHAT_MODEL),
                 system,
-                prompt: `Write a comprehensive markdown summary of the following sources:\n\n${sourceText}`,
+                prompt: [
+                    "Write a focused Markdown summary of the main subject.",
+                    "Start with a short overview.",
+                    "Then provide 3-6 meaningful sections covering the most important facts.",
+                    "Avoid unrelated topics, navigation links, and recent news unless central to the source.",
+                    "End with a brief conclusion.",
+                    "Keep the summary approximately 300-500 words when enough information is available.",
+                    "",
+                    "SOURCE MATERIAL:",
+                    sourceText,
+                ].join("\n"),
             });
-            return { markdown: result.text };
+
+            return { markdown: result.text.trim() };
         }
+
         case "TAKEAWAYS": {
             const result = await generateText({
                 model: openai(CHAT_MODEL),
                 system,
                 output: Output.object({ schema: takeawaysSchema }),
-                prompt: `Extract the most important key takeaways as concise bullet points from:\n\n${sourceText}`,
+                prompt: [
+                    "Extract 5-10 important, distinct takeaways.",
+                    "Each takeaway must contain a useful fact or concept.",
+                    "Avoid generic observations, promotional content, and unrelated links.",
+                    "Use only supported source information.",
+                    "",
+                    "SOURCE MATERIAL:",
+                    sourceText,
+                ].join("\n"),
             });
+
             return result.output;
         }
+
         case "FLASHCARDS": {
             const result = await generateText({
                 model: openai(CHAT_MODEL),
                 system,
                 output: Output.object({ schema: flashcardsSchema }),
-                prompt: `Create study flashcards (front/back) covering the main concepts from:\n\n${sourceText}`,
+                prompt: [
+                    "Create useful study flashcards from the main concepts.",
+                    "Each front should ask one clear question.",
+                    "Each back should give a concise, source-supported answer.",
+                    "Avoid duplicate questions and website navigation topics.",
+                    "",
+                    "SOURCE MATERIAL:",
+                    sourceText,
+                ].join("\n"),
             });
+
             return result.output;
         }
+
         case "QUIZ": {
             const result = await generateText({
                 model: openai(CHAT_MODEL),
                 system,
                 output: Output.object({ schema: quizSchema }),
-                prompt: `Create a multiple-choice quiz with explanations from:\n\n${sourceText}`,
+                prompt: [
+                    "Create a multiple-choice quiz about the source's main subject.",
+                    "Provide one correct answer per question.",
+                    "Make distractors plausible but clearly distinguishable.",
+                    "Explain each correct answer using supported source facts.",
+                    "Avoid unrelated website content.",
+                    "",
+                    "SOURCE MATERIAL:",
+                    sourceText,
+                ].join("\n"),
             });
+
             return result.output;
         }
+
         case "MINDMAP": {
             const result = await generateText({
                 model: openai(CHAT_MODEL),
                 system,
                 output: Output.object({ schema: mindmapSchema }),
-                prompt: `Create a mind map as nodes and edges. Use a central topic node and branch out logically from:\n\n${sourceText}`,
+                prompt: [
+                    "Create a logically structured mind map.",
+                    "Use one central topic and meaningful branches.",
+                    "Include only concepts relevant to the main subject.",
+                    "Every edge must reference valid node IDs.",
+                    "",
+                    "SOURCE MATERIAL:",
+                    sourceText,
+                ].join("\n"),
             });
+
             return result.output;
         }
+
         case "REPORT": {
             const result = await generateText({
                 model: openai(CHAT_MODEL),
                 system,
                 output: Output.object({ schema: reportSchema }),
-                prompt: `Write a structured long-form report with sections and a full markdown version from:\n\n${sourceText}`,
+                prompt: [
+                    "Write a structured educational report focused on the source's main subject.",
+                    "Include an overview, key findings, supporting details, and conclusion.",
+                    "Keep sections distinct and relevant.",
+                    "Exclude navigation links, unrelated news, and unsupported claims.",
+                    "Return both the complete Markdown report and structured sections.",
+                    "",
+                    "SOURCE MATERIAL:",
+                    sourceText,
+                ].join("\n"),
             });
+
             return result.output;
         }
+
         default:
-            throw new ValidationError(`Unsupported artifact type: ${type}`);
+            throw new ValidationError(
+                `Unsupported artifact type: ${type}`,
+            );
     }
 }

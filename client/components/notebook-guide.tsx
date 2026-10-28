@@ -150,7 +150,7 @@ export function NotebookGuide({
             </h3>
           </div>
 
-          <div className="prose prose-sm dark:prose-invert max-w-none break-words">
+          <div className="max-w-none break-words text-sm leading-7 [&_h1]:my-5 [&_h1]:text-3xl [&_h1]:font-bold [&_h2]:my-4 [&_h2]:text-2xl [&_h2]:font-semibold [&_h3]:my-3 [&_h3]:text-xl [&_h3]:font-semibold [&_p]:my-3 [&_ul]:my-3 [&_ul]:list-disc [&_ul]:pl-6 [&_ol]:my-3 [&_ol]:list-decimal [&_ol]:pl-6 [&_li]:my-1">
             <ReactMarkdown
               remarkPlugins={[remarkGfm]}
               components={{

@@ -1,41 +1,126 @@
-# Gemini Notebook (NotebookLM Clone)
+# Gemini Notebook — NotebookLM Clone
 
-An open-source, full-stack alternative to Google's NotebookLM. This application acts as your personalized AI research partner, allowing you to upload your own documents, websites, and videos to build a private knowledge base. Using advanced Retrieval-Augmented Generation (RAG), the AI strictly grounds its answers in the sources you provide — complete with precise inline citations.
+An open-source, full-stack AI research assistant inspired by Google's NotebookLM.
 
-**🔗 Live Demo:** [noteook-llm-clone-3ok5.vercel.app](https://noteook-llm-clone-3ok5.vercel.app/)
+Gemini Notebook lets users create research workspaces, import documents, websites, YouTube videos, and text, and interact with their content through AI-powered chat.
+
+Built using **Next.js, Express.js, TypeScript, PostgreSQL, Prisma, Pinecone, OpenAI, and Inngest**, the application uses Retrieval-Augmented Generation (RAG) to retrieve relevant information from user-selected sources and generate context-aware responses.
+
+**🔗 Live Demo:** [Gemini Notebook](https://noteook-llm-clone-3ok5.vercel.app/)
+
+**💻 GitHub:** [Source Code](https://github.com/JustenAnas/noteook-llm-clone)
+
+---
 
 ## ✨ Key Features
 
-- **Multi-Modal Source Uploads:** Effortlessly ingest context from various sources:
-  - **PDFs:** Automatic parsing, chunking, and cloud storage via Cloudinary.
-  - **Websites:** Automated scraping and markdown conversion via Firecrawl.
-  - **YouTube Videos:** Automatic fetching of video transcripts.
-  - **Raw Text / Markdown:** Directly copy and paste notes.
-- **Grounded AI Chat (RAG):** Ask questions and get answers based *exclusively* on your selected sources to eliminate AI hallucinations.
-- **Notebook Guides:** Automatically generate Study Guides, FAQs, Briefing Docs, and Timelines from your materials.
-- **Asynchronous Processing:** Highly reliable background job processing using Inngest for embedding generation and document chunking.
-- **Custom Authentication:** Secure, Redis-backed OTP email verification for user registration and password resets.
-- **Modern UI/UX:** Responsive, beautiful interface built to mirror the sleek aesthetic of Google products.
+### 📚 Multi-Source Knowledge Base
+
+Create dedicated research workspaces and import content from multiple sources:
+
+- **PDF Documents:** Upload PDFs, extract text, and store uploaded files using Cloudinary.
+- **Websites:** Extract website content using Firecrawl with main-content filtering to reduce navigation menus, unrelated links, and page clutter.
+- **YouTube Videos:** Retrieve available video transcripts using the Supadata API, with timestamped transcript content where supported.
+- **Text & Markdown:** Add notes and written content directly to your workspace.
+
+Imported sources can be processed into searchable knowledge for AI-powered conversations.
+
+### 🤖 Source-Grounded AI Chat
+
+Ask questions about your uploaded content using Retrieval-Augmented Generation.
+
+- Semantic search powered by Pinecone.
+- OpenAI embeddings for document retrieval.
+- Context-aware responses based on retrieved source content.
+- Select specific sources to include in conversations.
+- Streaming AI responses.
+- Source-based context to reduce unsupported answers.
+
+### 📝 AI Notebook Guides
+
+Automatically generate six types of learning and research materials from selected sources.
+
+| Guide | Description |
+|---|---|
+| **Summary** | Generate a structured overview of source material. |
+| **Key Takeaways** | Extract the most important facts and insights. |
+| **Study Guide** | Create topic explanations, definitions, and review questions. |
+| **FAQ** | Generate frequently asked questions with answers. |
+| **Timeline** | Organize explicitly dated events chronologically. |
+| **Briefing Doc** | Produce an executive-style briefing with findings and implications. |
+
+Generated guides support Markdown formatting, including headings, lists, emphasis, and structured sections, using React Markdown and remark-gfm.
+
+### ⚡ Background Document Processing
+
+Uses **Inngest** to coordinate asynchronous document processing.
+
+The ingestion pipeline includes:
+
+1. Extracting text from imported sources.
+2. Splitting source content into overlapping chunks.
+3. Generating vector embeddings with OpenAI.
+4. Storing vectors and metadata in Pinecone.
+5. Making processed sources available for retrieval.
+
+### 🔐 Authentication & Workspace Management
+
+- User registration and login.
+- Email OTP verification.
+- Password reset flows.
+- Redis-backed authentication-related workflows.
+- Dedicated research workspaces.
+- Source selection and management.
+
+### 🎨 Modern User Interface
+
+- Responsive Next.js interface.
+- Tailwind CSS v4 and shadcn/ui.
+- Lucide React icons.
+- Streaming chat interface.
+- Source management panels.
+- Structured Markdown rendering.
+
+---
 
 ## 🛠️ Tech Stack
 
-**Frontend:**
+### Frontend
 
-- [Next.js 15+ (App Router)](https://nextjs.org/) & [React 19](https://react.dev/)
-- [TypeScript](https://www.typescriptlang.org/)
-- [Tailwind CSS v4](https://tailwindcss.com/) & [shadcn/ui](https://ui.shadcn.com/)
-- [Vercel AI SDK](https://sdk.vercel.ai/docs) for real-time chat streaming
-- Lucide React (Icons) & Google Sans Typography
+| Technology | Purpose |
+|---|---|
+| Next.js (App Router) | Frontend framework |
+| React 19 | UI development |
+| TypeScript | Type safety |
+| Tailwind CSS v4 | Styling |
+| shadcn/ui | UI components |
+| Vercel AI SDK | AI streaming integration |
+| React Markdown | Markdown rendering |
+| remark-gfm | GitHub Flavored Markdown |
+| Lucide React | Icons |
 
-**Backend:**
+### Backend
 
-- [Express.js](https://expressjs.com/) (REST API)
-- [Prisma ORM](https://www.prisma.io/) with PostgreSQL
-- [Inngest](https://www.inngest.com/) for reliable background job queues
-- [Pinecone](https://www.pinecone.io/) for Serverless Vector Database storage
-- [OpenAI API](https://openai.com/) (`gpt-4o-mini`, `text-embedding-3-small`)
-- [Redis](https://redis.io/) (Upstash/Local) & Nodemailer for OTP Auth flows
-- [Cloudinary](https://cloudinary.com/) for PDF asset storage
+| Technology | Purpose |
+|---|---|
+| Node.js | JavaScript runtime |
+| Express.js | REST API |
+| TypeScript | Backend development |
+| Prisma ORM | Database access |
+| PostgreSQL | Relational database |
+| Redis | Authentication-related data and caching |
+| Nodemailer | Email delivery |
+| Inngest | Background processing |
+| Pinecone | Vector database |
+| OpenAI API | Chat generation and embeddings |
+| Cloudinary | PDF file storage |
+| Firecrawl | Website content extraction |
+| Supadata | YouTube transcript retrieval |
+
+### AI Models
+
+- **Chat:** `gpt-4o-mini`
+- **Embeddings:** `text-embedding-3-small`
 
 ---
 
@@ -43,28 +128,36 @@ An open-source, full-stack alternative to Google's NotebookLM. This application 
 
 ### Prerequisites
 
-- Node.js (v18+)
-- PostgreSQL Database
-- Redis Server (Local or Upstash)
-- API Keys for OpenAI, Pinecone, Cloudinary, and Firecrawl.
+Before running the application, install or configure:
 
-### 1. Clone the repository
+- Node.js (a version compatible with the project's package requirements)
+- npm
+- PostgreSQL
+- Redis
+- OpenAI API key
+- Pinecone API key and index
+- Cloudinary credentials
+- Firecrawl API key
+- Supadata API key
+- SMTP credentials for email delivery, if required by your configuration
+
+### 1. Clone the Repository
 
 ```bash
 git clone https://github.com/JustenAnas/noteook-llm-clone.git
 cd noteook-llm-clone
 ```
 
-### 2. Setup the Server (Backend)
+### 2. Set Up the Backend
 
-Navigate to the server directory and install dependencies:
+Navigate to the server directory:
 
 ```bash
 cd server
 npm install
 ```
 
-Create a `.env` file in the server directory and add your environment variables:
+Create a `.env` file inside `server/`:
 
 ```env
 # Server
@@ -74,81 +167,288 @@ CLIENT_URL=http://localhost:3000
 # Database
 DATABASE_URL="postgresql://user:password@localhost:5432/notebook"
 
-# Auth & Redis
-SESSION_SECRET="your-super-secret-session-key"
+# Authentication
+SESSION_SECRET="your-secure-session-secret"
+
+# Redis
 REDIS_URL="redis://localhost:6379"
 
-# SMTP (Optional: Defaults to Ethereal Email for dev if blank)
+# SMTP
 SMTP_HOST=
 SMTP_PORT=
 SMTP_USER=
 SMTP_PASS=
 
-# AI & Vector DB
-OPENAI_API_KEY="sk-..."
-PINECONE_API_KEY="pcsk_..."
+# OpenAI
+OPENAI_API_KEY="your-openai-api-key"
+
+# Pinecone
+PINECONE_API_KEY="your-pinecone-api-key"
 PINECONE_INDEX="chaibook"
 
-# 3rd Party APIs
+# Cloudinary
 CLOUDINARY_URL="cloudinary://API_KEY:API_SECRET@CLOUD_NAME"
-FIRECRAWL_API_KEY="fc-..."
+
+# Firecrawl
+FIRECRAWL_API_KEY="your-firecrawl-api-key"
+
+# YouTube Transcripts
+SUPADATA_API_KEY="your-supadata-api-key"
 ```
 
-Run database migrations and start the backend development server:
+**Security:** Never commit `.env` files or API keys to GitHub. Use your hosting provider's environment-variable settings in production.
+
+Generate the Prisma client and synchronize the development database:
 
 ```bash
 npx prisma generate
 npx prisma db push
+```
+
+Start the backend:
+
+```bash
 npm run dev
 ```
 
-### 3. Start the Inngest Background Worker
+The backend should run at:
 
-Open a new terminal window inside the `server` directory to start the Inngest dev server for handling document processing queues:
+```text
+http://localhost:8081
+```
+
+### 3. Start Inngest
+
+Open another terminal in the `server` directory:
 
 ```bash
 npx inngest-cli@latest dev -u http://localhost:8081/api/inngest
 ```
 
-### 4. Setup the Client (Frontend)
+This starts the local Inngest development server for background processing.
 
-Open a new terminal window, navigate to the client directory, and install dependencies:
+### 4. Set Up the Frontend
+
+Open another terminal from the project root:
 
 ```bash
 cd client
 npm install
 ```
 
-Create a `.env.local` file in the client directory:
+Create `client/.env.local`:
 
 ```env
 NEXT_PUBLIC_API_URL=http://localhost:8081
 ```
 
-Start the Next.js development server:
+Start the frontend:
 
 ```bash
 npm run dev
 ```
 
-Your frontend should now be running at [http://localhost:3000](http://localhost:3000).
+Open:
 
-## 🏗️ Architecture & How It Works
+[http://localhost:3000](http://localhost:3000)
 
-1. **Source Ingestion:** When a user uploads a PDF or website, the Node backend stores the raw file in Cloudinary (or fetches the HTML via Firecrawl).
-2. **Event Queue:** An event (`source/created`) is fired off to the Inngest background server.
-3. **Processing (RAG):** In the background, Inngest parses the text, splits it into semantically meaningful chunks (with 100-character overlaps), and hits the OpenAI API to generate vector embeddings.
-4. **Vector Storage:** The embeddings and associated metadata (Source ID, Workspace ID) are upserted into Pinecone Serverless.
-5. **Chat:** When a user asks a question, the Vercel AI SDK streams the query to the backend. The backend queries Pinecone for the highest-scoring chunks related to the selected sources, builds a strict system prompt containing those exact texts, and streams back a hallucination-free response.
+---
+
+## 🏗️ System Architecture
+
+```text
+                  USER
+                   |
+                   v
+           Next.js Frontend
+                   |
+                   v
+           Express REST API
+                   |
+       +-----------+-----------+
+       |                       |
+       v                       v
+ Authentication          Source Ingestion
+       |                       |
+       v              +--------+--------+
+ PostgreSQL/Redis     |        |        |
+                      v        v        v
+                     PDF    Website   YouTube
+                      |        |        |
+                      v        v        v
+                  PDF Parser Firecrawl Supadata
+                      |        |        |
+                      +--------+--------+
+                               |
+                               v
+                         Source Content
+                               |
+                               v
+                         Inngest Events
+                               |
+                               v
+                         Text Chunking
+                               |
+                               v
+                         OpenAI Embeddings
+                               |
+                               v
+                         Pinecone Vector DB
+                               |
+                               v
+                         Semantic Retrieval
+                               |
+                               v
+                         OpenAI Chat Model
+                               |
+                               v
+                         Streaming Response
+                               |
+                               v
+                         Next.js Frontend
+```
+
+### How RAG Works
+
+**1. Source ingestion**
+
+Users import documents, websites, YouTube videos, or text into a research workspace.
+
+**2. Text extraction**
+
+The backend extracts readable content using the appropriate service:
+
+- PDF parsing for documents.
+- Firecrawl for websites.
+- Supadata for available YouTube transcripts.
+- Direct content handling for text.
+
+**3. Background processing**
+
+Inngest handles document-processing events, including chunking and embedding generation.
+
+**4. Vector storage**
+
+OpenAI generates embeddings for source chunks, which are stored in Pinecone alongside source and workspace metadata.
+
+**5. Semantic retrieval**
+
+When a user asks a question, the backend retrieves relevant chunks from the selected workspace sources.
+
+**6. Response generation**
+
+The retrieved content is supplied to the language model as context, and the response is streamed to the frontend.
+
+This approach helps ground answers in imported content, although AI-generated responses should still be checked against their original sources.
+
+---
+
+## 📖 Notebook Guide Generation
+
+The Notebook Guide system provides six tools for transforming imported content into structured research materials.
+
+### Available Tools
+
+**Summary:** A high-level overview organized by topics.
+
+**Key Takeaways:** Important facts and conclusions in a concise format.
+
+**Study Guide:** Definitions, explanations, key concepts, and review questions.
+
+**FAQ:** Questions and answers based on the source material.
+
+**Timeline:** A chronological view of dated events found in the sources.
+
+**Briefing Doc:** A professional overview of findings, implications, and conclusions.
+
+The backend uses tool-specific generation instructions, while the frontend renders generated content using Markdown.
+
+---
+
+## 🎬 YouTube Transcript Integration
+
+YouTube video ingestion uses the **Supadata API** to retrieve available captions.
+
+The integration supports common YouTube URL formats, including:
+
+- Standard watch URLs
+- Shortened `youtu.be` URLs
+- YouTube Shorts
+- Embedded video URLs
+- Live video URLs with supported transcripts
+
+Where timestamps are returned, transcript segments are formatted with timestamps before ingestion.
+
+**Limitations:**
+
+- Some videos may not have accessible transcripts.
+- Transcript availability depends on the external provider.
+- Free-tier API usage is limited.
+- Very long videos may require asynchronous transcript processing.
+- Successful transcript retrieval and ingestion depend on the availability of the external services.
+
+The application handles API errors and provides feedback when transcript retrieval fails.
+
+---
+
+## ☁️ Deployment
+
+| Service | Platform |
+|---|---|
+| Frontend | Vercel |
+| Backend | Render |
+| Database | PostgreSQL |
+| Vector Database | Pinecone |
+| Background Processing | Inngest |
+| File Storage | Cloudinary |
+| YouTube Transcripts | Supadata |
+
+**Live Application:** [Gemini Notebook](https://noteook-llm-clone-3ok5.vercel.app/)
+
+### Production Configuration
+
+For production deployments:
+
+- Configure environment variables separately for frontend and backend.
+- Ensure the frontend API URL points to the deployed backend.
+- Configure database and Redis connections.
+- Configure the Inngest production integration.
+- Restrict CORS to trusted frontend origins.
+- Keep API keys on the server.
+- Monitor external API usage and rate limits.
+
+---
+
+## ⚠️ Known Limitations
+
+- AI-generated responses and guides may contain factual inaccuracies.
+- Source grounding reduces hallucinations but does not eliminate them.
+- YouTube transcript retrieval depends on third-party availability and API quotas.
+- Large source files may increase processing time and API usage.
+- External services may introduce rate limits or temporary failures.
+
+---
 
 ## 🤝 Contributing
 
-Contributions, issues, and feature requests are welcome! Feel free to check the [issues page](https://github.com/JustenAnas/noteook-llm-clone/issues) if you want to contribute.
+Contributions, bug reports, and feature requests are welcome.
+
+1. Fork the repository.
+2. Create a feature branch.
+3. Commit your changes.
+4. Push the branch.
+5. Open a pull request.
+
+For issues and suggestions, visit the [GitHub Issues page](https://github.com/JustenAnas/noteook-llm-clone/issues).
+
+---
 
 ## 📝 License
 
-This project is [MIT](LICENSE) licensed.
+This project is licensed under the [MIT License](LICENSE).
 
 ## 👤 Author
 
-Built by [Anas](https://github.com/JustenAnas)
+Built by [Anas](https://github.com/JustenAnas).
+
+**GitHub:** [JustenAnas](https://github.com/JustenAnas)

@@ -1,11 +1,26 @@
 
-import { YoutubeTranscript } from "youtube-transcript";
 import { ValidationError } from "../types/app-error.js";
+
+const SUPADATA_URL = "https://api.supadata.ai/v1/transcript";
+
+type TranscriptSegment = {
+  text: string;
+  offset?: number;
+  duration?: number;
+};
+
+type TranscriptResponse = {
+  content?: string | TranscriptSegment[];
+  jobId?: string;
+  status?: string;
+  error?: string;
+  message?: string;
+  details?: string;
+};
 
 function extractVideoId(input: string): string {
   const value = input.trim();
 
-  // Accept a raw YouTube video ID.
   if (/^[a-zA-Z0-9_-]{11}$/.test(value)) {
     return value;
   }
@@ -18,29 +33,24 @@ function extractVideoId(input: string): string {
     throw new ValidationError("Enter a valid YouTube URL");
   }
 
-  if (url.protocol !== "https:" && url.protocol !== "http:") {
+  if (!["https:", "http:"].includes(url.protocol)) {
     throw new ValidationError("Enter a valid YouTube URL");
   }
 
-  const hostname = url.hostname.toLowerCase().replace(/^www\./, "");
+  const host = url.hostname.toLowerCase().replace(/^www\./, "");
   const parts = url.pathname.split("/").filter(Boolean);
 
   let videoId: string | null = null;
 
-  if (hostname === "youtu.be") {
+  if (host === "youtu.be") {
     videoId = parts[0] ?? null;
   } else if (
-    hostname === "youtube.com" ||
-    hostname === "m.youtube.com" ||
-    hostname === "music.youtube.com"
+    ["youtube.com", "m.youtube.com", "music.youtube.com"].includes(host)
   ) {
     if (url.pathname === "/watch") {
       videoId = url.searchParams.get("v");
     } else if (
-      parts[0] === "shorts" ||
-      parts[0] === "embed" ||
-      parts[0] === "live" ||
-      parts[0] === "v"
+      ["shorts", "embed", "live", "v"].includes(parts[0])
     ) {
       videoId = parts[1] ?? null;
     }
@@ -54,65 +64,165 @@ function extractVideoId(input: string): string {
 }
 
 function formatTimestamp(milliseconds: number): string {
-  const totalSeconds = Math.floor(milliseconds / 1000);
+  const seconds = Math.floor(milliseconds / 1000);
+  const hours = Math.floor(seconds / 3600);
+  const minutes = Math.floor((seconds % 3600) / 60);
+  const remainingSeconds = seconds % 60;
 
-  const hours = Math.floor(totalSeconds / 3600);
-  const minutes = Math.floor((totalSeconds % 3600) / 60);
-  const seconds = totalSeconds % 60;
+  const pad = (number: number) => String(number).padStart(2, "0");
 
-  const twoDigits = (value: number) =>
-    String(value).padStart(2, "0");
+  return hours > 0
+    ? `${pad(hours)}:${pad(minutes)}:${pad(remainingSeconds)}`
+    : `${pad(minutes)}:${pad(remainingSeconds)}`;
+}
 
-  if (hours > 0) {
-    return `${twoDigits(hours)}:${twoDigits(minutes)}:${twoDigits(seconds)}`;
+function getApiError(status: number, data: TranscriptResponse): string {
+  const error = `${data.error ?? ""} ${data.message ?? ""} ${data.details ?? ""}`
+    .toLowerCase();
+
+  if (status === 401 || status === 403) {
+    return "YouTube transcript API authentication failed. Check your Supadata API key.";
   }
 
-  return `${twoDigits(minutes)}:${twoDigits(seconds)}`;
+  if (status === 402 || status === 429) {
+    return "YouTube transcript API quota or rate limit reached. Please try again later.";
+  }
+
+  if (
+    error.includes("transcript-unavailable") ||
+    error.includes("no transcript")
+  ) {
+    return "No captions are available for this YouTube video.";
+  }
+
+  if (status === 400 || status === 404) {
+    return "The YouTube video is invalid, unavailable, or unsupported.";
+  }
+
+  return "Could not fetch the YouTube transcript. Please try again later.";
+}
+
+async function requestTranscript(
+  url: string,
+  apiKey: string
+): Promise<TranscriptResponse> {
+  const response = await fetch(url, {
+    headers: {
+      "x-api-key": apiKey,
+      Accept: "application/json",
+    },
+    signal: AbortSignal.timeout(30000),
+  });
+
+  const data = (await response.json().catch(() => ({}))) as TranscriptResponse;
+
+  if (!response.ok) {
+    console.error("Supadata transcript request failed:", {
+      status: response.status,
+      error: data.error,
+      message: data.message,
+      details: data.details,
+    });
+
+    throw new ValidationError(getApiError(response.status, data));
+  }
+
+  return data;
+}
+
+async function resolveTranscript(
+  initialData: TranscriptResponse,
+  apiKey: string
+): Promise<TranscriptResponse> {
+  if (!initialData.jobId) {
+    return initialData;
+  }
+
+  const jobId = initialData.jobId;
+
+  if (!/^[a-zA-Z0-9_-]+$/.test(jobId)) {
+    throw new ValidationError("Invalid transcript job ID.");
+  }
+
+  for (let attempt = 0; attempt < 10; attempt++) {
+    await new Promise((resolve) => setTimeout(resolve, 2000));
+
+    const data = await requestTranscript(
+      `${SUPADATA_URL}/${jobId}`,
+      apiKey
+    );
+
+    if (data.status === "failed") {
+      throw new ValidationError(
+        "YouTube transcript processing failed."
+      );
+    }
+
+    if (data.status === "completed" || data.content !== undefined) {
+      return data;
+    }
+  }
+
+  throw new ValidationError(
+    "YouTube transcript is still processing. Please try again later."
+  );
 }
 
 export async function fetchYoutubeTranscript(url: string) {
   const videoId = extractVideoId(url);
 
+  const apiKey = process.env.SUPADATA_API_KEY;
+
+  if (!apiKey) {
+    throw new Error("SUPADATA_API_KEY is not configured");
+  }
+
+  const videoUrl = `https://www.youtube.com/watch?v=${videoId}`;
+
+  const params = new URLSearchParams({
+    url: videoUrl,
+    mode: "native",
+  });
+
   try {
-    const segments = await YoutubeTranscript.fetchTranscript(videoId);
+    const initialData = await requestTranscript(
+      `${SUPADATA_URL}?${params.toString()}`,
+      apiKey
+    );
 
-    if (!segments || segments.length === 0) {
-      throw new ValidationError(
-        "No transcript is available for this video."
-      );
+    const data = await resolveTranscript(initialData, apiKey);
+
+    let content = "";
+
+    if (typeof data.content === "string") {
+      content = data.content.trim();
+    } else if (Array.isArray(data.content)) {
+      content = data.content
+        .filter(
+          (segment) =>
+            typeof segment.text === "string" &&
+            segment.text.trim().length > 0
+        )
+        .map((segment) => {
+          const text = segment.text.replace(/\s+/g, " ").trim();
+
+          if (typeof segment.offset === "number") {
+            return `[${formatTimestamp(segment.offset)}] ${text}`;
+          }
+
+          return text;
+        })
+        .join("\n")
+        .trim();
     }
-
-    const content = segments
-      .filter(
-        (segment) =>
-          typeof segment.text === "string" &&
-          segment.text.trim().length > 0
-      )
-      .map((segment) => {
-        const text = segment.text
-          .replace(/\s+/g, " ")
-          .trim();
-
-        const offset =
-          typeof segment.offset === "number"
-            ? segment.offset
-            : 0;
-
-        return `[${formatTimestamp(offset)}] ${text}`;
-      })
-      .join("\n")
-      .trim();
 
     if (!content) {
       throw new ValidationError(
-        "The video transcript is empty."
+        "No captions are available for this YouTube video."
       );
     }
 
-    return {
-      videoId,
-      content,
-    };
+    return { videoId, content };
   } catch (error) {
     console.error("YouTube transcript error:", error);
 
@@ -120,40 +230,17 @@ export async function fetchYoutubeTranscript(url: string) {
       throw error;
     }
 
-    const message =
-      error instanceof Error
-        ? error.message.toLowerCase()
-        : "";
-
     if (
-      message.includes("disabled") ||
-      message.includes("transcript is disabled")
+      error instanceof Error &&
+      (error.name === "TimeoutError" || error.name === "AbortError")
     ) {
       throw new ValidationError(
-        "Transcripts are disabled for this YouTube video."
-      );
-    }
-
-    if (
-      message.includes("unavailable") ||
-      message.includes("not available")
-    ) {
-      throw new ValidationError(
-        "This YouTube video or its transcript is unavailable."
-      );
-    }
-
-    if (
-      message.includes("too many requests") ||
-      message.includes("429")
-    ) {
-      throw new ValidationError(
-        "YouTube is temporarily rate-limiting transcript requests. Please try again later."
+        "YouTube transcript request timed out. Please try again."
       );
     }
 
     throw new ValidationError(
-      "Could not retrieve this video's transcript. Captions may be unavailable, or YouTube may be blocking the request."
+      "Could not connect to the YouTube transcript service."
     );
   }
 }

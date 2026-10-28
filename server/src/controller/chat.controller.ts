@@ -321,12 +321,56 @@ export async function chat(req: Request, res: Response) {
       selectedSourceIds
     );
 
+    console.log("[RAG DEBUG]", {
+      workspaceId,
+      selectedSourceIds,
+      query,
+      chunksCount: chunks.length,
+      chunksPreview: JSON.stringify(chunks).slice(0, 1000),
+    });
+
+    // If semantic retrieval returns nothing, use the stored transcript as
+    // grounded fallback rather than asking the user to supply the video.
+    let transcriptFallback = "";
+
+    if (chunks.length === 0) {
+      const youtubeSources = await prisma.source.findMany({
+        where: {
+          workspaceId,
+          id: { in: selectedSourceIds },
+          status: "READY",
+          type: "YOUTUBE",
+        },
+        select: {
+          title: true,
+          content: true,
+        },
+      });
+
+      transcriptFallback = youtubeSources
+        .filter((source) => source.content?.trim())
+        .map(
+          (source) =>
+            `Source: ${source.title}\nTranscript:\n${source.content}`
+        )
+        .join("\n\n---\n\n")
+        .slice(0, 30000);
+
+      console.log("[RAG DEBUG] Transcript fallback:", {
+        sourceCount: youtubeSources.length,
+        fallbackLength: transcriptFallback.length,
+      });
+    }
+
     const systemPrompt = buildChatSystemPrompt({ chunks });
     const recentMessages = normalizedMessages.slice(-12);
 
     const result = streamText({
       model: openai(CHAT_MODEL),
       system: `${systemPrompt}
+${transcriptFallback
+  ? `\nSelected YouTube transcript (use this source material to answer the user's question):\n${transcriptFallback}\n`
+  : ""}
 
 Additional grounding requirements:
 - Answer factual questions about uploaded sources only using retrieved context.

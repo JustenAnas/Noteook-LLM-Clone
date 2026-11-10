@@ -34,8 +34,8 @@ export async function extractPdfFromBuffer(
     const { totalPages, text } = await extractText(pdf, { mergePages: false });
 
     const pages = Array.isArray(text)
-        ? text.map((page) => page.trim())
-        : [String(text).trim()];
+    ? text.map((page) => page.replace(/\u0000/g, "").trim())
+    : [String(text).replace(/\u0000/g, "").trim()];
 
     const joined = pages.filter(Boolean).join("\n\n");
 
